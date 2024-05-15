@@ -1,0 +1,10 @@
+Chap-2 / Chap-5:  Fix bug in plots where agb = NA wasn't included when plotting sample locations
+
+Chap-5:  Add plot for finite-element basis functions for SPDE method
+Chap-5:  Add explanation for how SPDE method can be derived as simultaneous equation model, see Slide-19 of Week-5 Lecture powerpoint
+
+Chap-7:  Change "Extrapolation" to "Interpolation" in top-right panel of "SEM_performance.png"
+
+Chap-8:  Show mesh vs. data availability
+
+Throughout: When specifying x ~ MVN(0,\Sigma^{-1}), instead switch to notation x ~ GMRF(0,Q) and define GMRF as MVN using a precision matrix, and how the MVN PDF only uses Q and det(Q) hence GMRF being computationally efficient
