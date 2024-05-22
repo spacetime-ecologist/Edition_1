@@ -7,4 +7,6 @@ Chap-7:  Change "Extrapolation" to "Interpolation" in top-right panel of "SEM_pe
 
 Chap-8:  Show mesh vs. data availability
 
+Chap-10:  Change matexp(.) to be more clear about nsteps=0 using expm(.)
+
 Throughout: When specifying x ~ MVN(0,\Sigma^{-1}), instead switch to notation x ~ GMRF(0,Q) and define GMRF as MVN using a precision matrix, and how the MVN PDF only uses Q and det(Q) hence GMRF being computationally efficient
