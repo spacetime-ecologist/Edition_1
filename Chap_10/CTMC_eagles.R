@@ -43,21 +43,30 @@ samples = st_transform( samples, crs=st_crs("+init=epsg:3338 +units=km") )
 samples$Year = as.numeric(samples$Year)
 samples$SpeciesTotal = as.numeric(samples$SpeciesTotal)
 
-#
-cellsize = 200
-sf_fullgrid = st_make_grid( sf_states, cellsize=cellsize)
-sf_grid = st_make_valid(st_intersection( sf_fullgrid, sf_states ))
-sf_grid = sf_grid[ st_area(sf_grid)>(0.01*max(st_area(sf_grid))) ]
+if( TRUE ){
+  df_grid = st_read( "df_grid.shp" )
+  sf_grid = st_read( "sf_grid.shp" )
+}else{
+  # OLD CODE using get_elev_point(.), which is now deprecated (uses 4.2.2)
+  cellsize = 200
+  sf_fullgrid = st_make_grid( sf_states, cellsize=cellsize)
+  sf_grid = st_make_valid(st_intersection( sf_fullgrid, sf_states ))
+  sf_grid = sf_grid[ st_area(sf_grid)>(0.01*max(st_area(sf_grid))) ]
 
-# make data frame of covariates
-df_grid = st_centroid(sf_grid)
-df_grid = get_elev_point( df_grid, src = "aws" )
-df_grid[,c('elevation','elev_units')] = data.frame(df_grid$elevation / 1000, "kilometers")
-df_grid$elevation = ifelse( is.na(df_grid$elevation), 0, df_grid$elevation )
-df_grid$NDVI = extract( x=copNDVI, y=as(df_grid,"Spatial") ) / 255
-dist_to_coast = st_distance( sf_grid, st_cast(sf_coast,"LINESTRING") ) / 1000
-df_grid$dist_to_coast = apply( dist_to_coast, MARGIN=1, FUN=min )
-df_grid = data.frame(df_grid)
+  # make data frame of covariates
+  df_grid = st_centroid(sf_grid)
+  df_grid = get_elev_point( df_grid, src = "aws" )
+  df_grid[,c('elevation','elev_units')] = data.frame(df_grid$elevation / 1000, "kilometers")
+  df_grid$elevation = ifelse( is.na(df_grid$elevation), 0, df_grid$elevation )
+  df_grid$NDVI = extract( x=copNDVI, y=as(df_grid,"Spatial") ) / 255
+  dist_to_coast = st_distance( sf_grid, st_cast(sf_coast,"LINESTRING") ) / 1000
+  df_grid$dist_to_coast = apply( dist_to_coast, MARGIN=1, FUN=min )
+  df_grid = data.frame(df_grid)
+
+  # Save
+  st_write( df_grid, dsn = "df_grid.shp" )   #
+  st_write( sf_grid, dsn = "sf_grid.shp" )
+}
 
 # Bin into grids
 samples = st_intersection( samples, sf_grid )
