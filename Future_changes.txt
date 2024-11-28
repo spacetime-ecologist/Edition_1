@@ -3,10 +3,13 @@ Chap-2 / Chap-5:  Fix bug in plots where agb = NA wasn't included when plotting 
 Chap-5:  Add plot for finite-element basis functions for SPDE method
 Chap-5:  Add explanation for how SPDE method can be derived as simultaneous equation model, see Slide-19 of Week-5 Lecture powerpoint
 
+Covariates chapter:  Add section on feature selection, i.e., estimating average vs. min/max vs. fine-scale when changing covariate scale, scale-dependence of functionals such as slope/aspect/rugosity
+
 Chap-7:  Change "Extrapolation" to "Interpolation" in top-right panel of "SEM_performance.png"
 
 Chap-8:  Show mesh vs. data availability
 
 Chap-10:  Change matexp(.) to be more clear about nsteps=0 using expm(.)
+Chap-10:  Note that x_{t+1}^T = (x_t)^T M calculates the stationary distribution from eigenvectors of (M)^T, and x_{t+1} = M x_t calculates it from eigenvectors of M
 
 Throughout: When specifying x ~ MVN(0,\Sigma^{-1}), instead switch to notation x ~ GMRF(0,Q) and define GMRF as MVN using a precision matrix, and how the MVN PDF only uses Q and det(Q) hence GMRF being computationally efficient

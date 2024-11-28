@@ -59,7 +59,9 @@ plot( sf_data[1], add=TRUE )
 
 # Define covariates
 Q_formula = ~ 0 + Data_type
-X_formula = ~ 0 + poly( bathy, 2, raw=TRUE ) + Year
+#X_formula = ~ 0 + poly( bathy, 2, raw=TRUE ) + Year
+X_formula = ~ 0 + poly( bathy, 2 ) + Year
+#X_formula = ~ 0 + Year
 
 # Make Q-matrix
 Q_ij = model.matrix( Q_formula, sf_data )
@@ -101,7 +103,8 @@ Params = list( "ln_tau" = 0,
                "omega_s" = rnorm(nrow(spde$c0),sd=0) )
 obj = MakeADFun( data=Data, parameters=Params, random="omega_s" )
 # Optimize
-opt = nlminb( objective=obj$fn, grad=obj$gr, start=obj$par )
+opt = nlminb( objective=obj$fn, grad=obj$gr, start=obj$par,
+              control = list(iter.max=1e4, eval.max=1e4) )
 opt$SD = sdreport( obj, getJointPrecision=TRUE )
 report = obj$report()
 

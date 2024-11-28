@@ -7,8 +7,8 @@ dyn.load( TMB:::dynlib("epsilon_estimator") )
 
 ########## START IN-LINE SNIPPET
 # Define true distribution and transformation
-Dist = 0  # 0=Normal; 1=Gamma
-Trans = 2  # 0=Identity; 1=sqrt; 2=exp
+Dist = 1  # 0=Normal; 1=Gamma
+Trans = 0  # 0=Identity; 1=sqrt; 2=exp
 if( Dist==0 ){
   mu = 1
   sigma = 0.5

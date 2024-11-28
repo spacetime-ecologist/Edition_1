@@ -139,7 +139,7 @@ compile( "gompertz.cpp" )
 dyn.load( dynlib("gompertz") )
 
 # Build inputs
-Data = list( "log_b_t"=log(Index_t), "log_bnew_z"=xpred, "simulate_t"=rep(0,length(Index_t)) )
+Data = list( "log_b_t"=log(Index_t) )
 Parameters = list( "log_d0"=0, "log_sigmaP"=1, "log_sigmaM"=1, "alpha"=0, "rho"=0, "log_d_t"=rep(0,length(Index_t)) )
 Random = "log_d_t"
 
@@ -183,8 +183,8 @@ Q = solve(R)
 # Build inputs
 compile( "gompertz_SAR.cpp" )
 dyn.load( dynlib("gompertz_SAR") )
-Data = list( "log_b_t"=log(Index_t), "log_bnew_z"=xpred )
-Parameters = list( "log_delta"=0, "log_sigmaP"=1, "log_sigmaM"=1, "alpha"=0, "rho"=0.76, "eps_t"=rep(0,length(Index_t)) )
+Data = list( "log_b_t"=log(Index_t) )
+Parameters = list( "log_delta"=0, "log_sigmaP"=1, "log_sigmaM"=1, "alpha"=0, "rho"=0, "eps_t"=rep(0,length(Index_t)) )
 Random = c("eps_t")
 #Map = list("rho"=factor(NA))
 

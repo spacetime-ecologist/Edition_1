@@ -17,7 +17,6 @@ Type objective_function<Type>::operator() ()
 {
   // Data
   DATA_VECTOR( log_b_t );
-  DATA_VECTOR( log_bnew_z );
 
   // Parameters
   PARAMETER( log_delta );
@@ -43,13 +42,6 @@ Type objective_function<Type>::operator() ()
     jnll -= dnorm( log_b_t(t), log_d_t(t), exp(log_sigmaM), true );
   }
   ADREPORT(log_d_t)
-
-  // Predicted production function
-  vector<Type> log_out_z( log_bnew_z.size() );
-  for( int t=0; t<log_bnew_z.size(); t++){
-    log_out_z(t) = alpha + rho * log_bnew_z(t);
-  }
-  ADREPORT( log_out_z );
 
   // Reporting
   return jnll;

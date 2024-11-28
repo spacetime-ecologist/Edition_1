@@ -42,13 +42,13 @@ st_crs(samples) = "+proj=longlat +datum=WGS84"
 samples = st_transform( samples, crs=st_crs("+init=epsg:3338 +units=km") )
 samples$Year = as.numeric(samples$Year)
 samples$SpeciesTotal = as.numeric(samples$SpeciesTotal)
+cellsize = 200
 
 if( TRUE ){
   df_grid = st_read( "df_grid.shp" )
-  sf_grid = st_read( "sf_grid.shp" )
+  sf_grid = st_geometry(st_read( "sf_grid.shp" ))
 }else{
   # OLD CODE using get_elev_point(.), which is now deprecated (uses 4.2.2)
-  cellsize = 200
   sf_fullgrid = st_make_grid( sf_states, cellsize=cellsize)
   sf_grid = st_make_valid(st_intersection( sf_fullgrid, sf_states ))
   sf_grid = sf_grid[ st_area(sf_grid)>(0.01*max(st_area(sf_grid))) ]
@@ -94,7 +94,8 @@ compile( "CAR_expm.cpp" ) # framework='TMBad'
 dyn.load( dynlib("CAR_expm") )
 
 # Covariates ... I(.) doesn't work right with scale
-preference_formula = ~ 0 + poly(elevation,2,raw=TRUE) + poly(NDVI,2,raw=TRUE) + poly(dist_to_coast,2,raw=TRUE)
+preference_formula = ~ 0 + poly(elevatn,2,raw=TRUE) + poly(NDVI,2,raw=TRUE) + poly(dst_t_c,2,raw=TRUE)
+#preference_formula = ~ 0 + poly(elevation,2,raw=TRUE) + poly(NDVI,2,raw=TRUE) + poly(dist_to_coast,2,raw=TRUE)
 X_sz = model.matrix( preference_formula, data=df_grid )
 
 # Assemble inputs
@@ -124,7 +125,9 @@ Map = NULL
   Map$ln_D = factor(NA)
 
 # Build object
-obj = MakeADFun( data=Data, parameters=Params, random=c("beta_t","ln_D_st"), map=Map, DLL="CAR_expm" )
+config( tmbad.sparse_hessian_compress = TRUE )
+obj = MakeADFun( data=Data, parameters=Params, random=c("beta_t","ln_D_st"),
+                 map=Map, DLL="CAR_expm" )
 opt = nlminb( start=obj$par, obj=obj$fn, gr=obj$gr )
 opt$SD = sdreport( obj )
 report = obj$report()
@@ -133,7 +136,8 @@ report = obj$report()
 ln_D_st = obj$env$parList()$ln_D_st
 colnames(ln_D_st) = sort(unique(samples$Year))
 plotgrid = st_sf( sf_grid, 
-                  df_grid[,c("elevation","NDVI","dist_to_coast")],
+                  #df_grid[,c("elevation","NDVI","dist_to_coast")],
+                  df_grid[,c("elevatn","NDVI","dst_t_c")],
                   preference = report$h_s,
                   log_D = ln_D_st, 
                   crs = st_crs(sf_grid) )
@@ -159,7 +163,8 @@ dev.off()
 png( paste0("Eagle_covariate_response.png"), width=6, height=2, res=200, units="in" )
   par( mfrow=c(1,3), mar=c(3,2,1,1), mgp=c(2,0.5,0), tck=-0.02 )
   for( cI in 1:3 ){
-    Xval = seq( min(df_grid[[c("elevation","NDVI","dist_to_coast")[cI]]]),max(df_grid[[c("elevation","NDVI","dist_to_coast")[cI]]]),length=1000)
+    #Xval = seq( min(df_grid[[c("elevation","NDVI","dist_to_coast")[cI]]]),max(df_grid[[c("elevation","NDVI","dist_to_coast")[cI]]]),length=1000)
+    Xval = seq( min(df_grid[[c("elevatn","NDVI","dst_t_c")[cI]]]),max(df_grid[[c("elevatn","NDVI","dst_t_c")[cI]]]),length=1000)
     X_sz = model.matrix( ~ 0 + poly(Xval,2,raw=TRUE), data=data.frame("Xval"=Xval) )
     Yval = X_sz %*% obj$env$parList()$gamma_z[2*(cI-1)+1:2]
     plot( x=Xval, y=Yval, type="l", lwd=2, ylab="Preference", xlab=c("elevation","NDVI","distance to coast")[cI] )
@@ -184,23 +189,30 @@ quant = function(x) seq(min(x),max(x),length=21)
 # get_predict( fit, param="gamma_z", newpar=rep(0,length(get_coef(fit,param="gamma_z"))), newdata=new_elev )
 
 # Get prediction for partial dependence plots
-new_elev = datagrid( newdata=data.frame(df_grid)[,c('elevation','NDVI','dist_to_coast')], elevation=quant, NDVI=mean, dist_to_coast=mean) #, NDVI=quant, dist_to_coast=quant )
+#new_elev = datagrid( newdata=data.frame(df_grid)[,c('elevation','NDVI','dist_to_coast')], elevation=quant, NDVI=mean, dist_to_coast=mean) #, NDVI=quant, dist_to_coast=quant )
+new_elev = datagrid( newdata=data.frame(df_grid)[,c('elevatn','NDVI','dst_t_c')], elevatn=quant, NDVI=mean, dst_t_c=mean) #, NDVI=quant, dist_to_coast=quant )
   pred_elev = predictions( fit, newdata=new_elev, center=TRUE, param="gamma_z" )
-new_NDVI = datagrid( newdata=data.frame(df_grid), elevation=mean, NDVI=quant, dist_to_coast=mean) #, NDVI=quant, dist_to_coast=quant )
+#new_NDVI = datagrid( newdata=data.frame(df_grid), elevation=mean, NDVI=quant, dist_to_coast=mean) #, NDVI=quant, dist_to_coast=quant )
+new_NDVI = datagrid( newdata=data.frame(df_grid), elevatn=mean, NDVI=quant, dst_t_c=mean) #, NDVI=quant, dist_to_coast=quant )
   pred_NDVI = predictions( fit, newdata=new_NDVI, center=TRUE, param="gamma_z" )
-new_dist = datagrid( newdata=data.frame(df_grid), elevation=mean, NDVI=mean, dist_to_coast=quant) #, NDVI=quant, dist_to_coast=quant )
+#new_dist = datagrid( newdata=data.frame(df_grid), elevation=mean, NDVI=mean, dist_to_coast=quant) #, NDVI=quant, dist_to_coast=quant )
+new_dist = datagrid( newdata=data.frame(df_grid), elevatn=mean, NDVI=mean, dst_t_c=quant) #, NDVI=quant, dist_to_coast=quant )
   pred_dist = predictions( fit, newdata=new_dist, center=TRUE, param="gamma_z" )
 
 # Make plot of marginal effects
 p1 <- ggplot( as.data.frame(pred_elev) ) +
-  geom_line( aes(y=estimate, x=elevation), color="blue", size=1 ) +
-  geom_ribbon( aes( x=elevation, ymin=conf.low, ymax=conf.high), fill=rgb(0,0,1,0.2) )
+  #geom_line( aes(y=estimate, x=elevation), color="blue", size=1 ) +
+  #geom_ribbon( aes( x=elevation, ymin=conf.low, ymax=conf.high), fill=rgb(0,0,1,0.2) )
+  geom_line( aes(y=estimate, x=elevatn), color="blue", size=1 ) +
+  geom_ribbon( aes( x=elevatn, ymin=conf.low, ymax=conf.high), fill=rgb(0,0,1,0.2) )
 p2 <- ggplot( as.data.frame(pred_NDVI) ) +
   geom_line( aes(y=estimate, x=NDVI), color="blue", size=1 ) +
   geom_ribbon( aes( x=NDVI, ymin=conf.low, ymax=conf.high), fill=rgb(0,0,1,0.2) )
 p3 <- ggplot( as.data.frame(pred_dist) ) +
-  geom_line( aes(y=estimate, x=dist_to_coast ), color="blue", size=1 ) +
-  geom_ribbon( aes( x=dist_to_coast, ymin=conf.low, ymax=conf.high), fill=rgb(0,0,1,0.2) )
+  #geom_line( aes(y=estimate, x=dist_to_coast ), color="blue", size=1 ) +
+  #geom_ribbon( aes( x=dist_to_coast, ymin=conf.low, ymax=conf.high), fill=rgb(0,0,1,0.2) )
+  geom_line( aes(y=estimate, x=dst_t_c ), color="blue", size=1 ) +
+  geom_ribbon( aes( x=dst_t_c, ymin=conf.low, ymax=conf.high), fill=rgb(0,0,1,0.2) )
 p <- grid.arrange(p1, p2, p3, nrow = 1)
 ggsave( paste0("Eagle_covariate_response.png"), p, width=6, height=2 )
 

@@ -59,6 +59,8 @@ Type objective_function<Type>::operator() ()
   REPORT( SigmaE );
   REPORT( logN_g );
   ADREPORT( SigmaE );
+  Type N = sum( exp(logN_g) );
+  ADREPORT( N );
 
   return jnll;
 }

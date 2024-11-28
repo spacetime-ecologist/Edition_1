@@ -45,7 +45,9 @@ Type objective_function<Type>::operator() ()
 
   // Objective funcction
   vector<Type> jnll_comp(3);
+  vector<Type> jnll_t( n_t );
   jnll_comp.setZero();
+  jnll_t.setZero();
   int n_i = A_is.rows();
   int n_g = A_gs.rows();
   Type rhoE = invlogit( logit_rhoE );
@@ -55,11 +57,12 @@ Type objective_function<Type>::operator() ()
   jnll_comp(1) += SCALE( GMRF(Q), 1/exp(ln_tauO) )( omega_s );
   for( int t=0; t<n_t; t++){
     if( t==0 ){
-      jnll_comp(2) += SCALE( GMRF(Q), 1 / exp(ln_tauE) / pow( 1.0-pow(rhoE,2), 0.5 ) )( epsilon_st.col(t) );
+      jnll_t(t) += SCALE( GMRF(Q), 1 / exp(ln_tauE) / pow( 1.0-pow(rhoE,2), 0.5 ) )( epsilon_st.col(t) );
     }else{
-      jnll_comp(2) += SCALE( GMRF(Q), 1 / exp(ln_tauE) )( epsilon_st.col(t) - rhoE*epsilon_st.col(t-1) );
+      jnll_t(t) += SCALE( GMRF(Q), 1 / exp(ln_tauE) )( epsilon_st.col(t) - rhoE*epsilon_st.col(t-1) );
     }
   }
+  jnll_comp(2) = sum( jnll_t );
 
   // True density and abundance
   vector<Type> omega_g( n_g );
@@ -120,6 +123,8 @@ Type objective_function<Type>::operator() ()
   ADREPORT( b_t );
   REPORT( zmean_t );
   ADREPORT( zmean_t );
+  REPORT( rhoE );
+  REPORT( jnll_t );
 
   return jnll;
 }

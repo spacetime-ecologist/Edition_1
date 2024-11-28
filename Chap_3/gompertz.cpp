@@ -4,8 +4,6 @@ Type objective_function<Type>::operator() ()
 {
   // Data
   DATA_VECTOR( log_b_t );
-  DATA_VECTOR( log_bnew_z );
-  DATA_VECTOR( simulate_t );
 
   // Parameters
   PARAMETER( log_d0 );
@@ -17,16 +15,13 @@ Type objective_function<Type>::operator() ()
 
   // Objective funcction
   Type jnll = 0;
+  vector<Type> log_dhat_t( log_d_t.size() );
 
   // Probability of random coefficients
   jnll -= dnorm( log_d_t(0), log_d0, exp(log_sigmaP), true );
   for( int t=1; t<log_b_t.size(); t++){
-    if( simulate_t(t) == 1 ){
-      SIMULATE{
-        log_d_t(t) = rnorm( alpha + rho*log_d_t(t-1), exp(log_sigmaP) );
-      }
-    }
-    jnll -= dnorm( log_d_t(t), alpha + rho*log_d_t(t-1), exp(log_sigmaP), true );
+    log_dhat_t(t) = alpha + rho*log_d_t(t-1);
+    jnll -= dnorm( log_d_t(t), log_dhat_t(t), exp(log_sigmaP), true );
   }
 
   // Probability of data conditional on fixed and random effect values
@@ -36,14 +31,8 @@ Type objective_function<Type>::operator() ()
     }
   }
 
-  // Predicted production function
-  vector<Type> log_out_z( log_bnew_z.size() );
-  for( int t=0; t<log_bnew_z.size(); t++){
-    log_out_z(t) = alpha + rho * log_bnew_z(t);
-  }
-  ADREPORT( log_out_z );
-  SIMULATE{ REPORT( log_d_t ); }
-
   // Reporting
+  REPORT( log_dhat_t );
+  ADREPORT( log_dhat_t );
   return jnll;
 }
