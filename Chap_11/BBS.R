@@ -13,7 +13,7 @@ source( "../Shared_functions/add_legend.R" )
 
 # Load data
 DF = read.csv( file="Top20_Samples.csv" )
-trait_set = read.csv( "Top20_traits.csv" )
+trait_set = read.csv( "Top20_Traits.csv" )
 
 if( TRUE ){
   # sf_df
