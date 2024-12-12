@@ -12,4 +12,11 @@ Chap-8:  Show mesh vs. data availability
 Chap-10:  Change matexp(.) to be more clear about nsteps=0 using expm(.)
 Chap-10:  Note that x_{t+1}^T = (x_t)^T M calculates the stationary distribution from eigenvectors of (M)^T, and x_{t+1} = M x_t calculates it from eigenvectors of M
 
+Chap-12:  DSEM + spatial variation
+
+Chap-13:  nonlinear spatio-temporal models
+
 Throughout: When specifying x ~ MVN(0,\Sigma^{-1}), instead switch to notation x ~ GMRF(0,Q) and define GMRF as MVN using a precision matrix, and how the MVN PDF only uses Q and det(Q) hence GMRF being computationally efficient
+
+Location TBD:
+* Add discussion of marginal AIC, conditional AIC, EDF, and in-sample vs. out-of-sample predictive probability

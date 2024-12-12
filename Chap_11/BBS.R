@@ -3,11 +3,9 @@ library(sf)
 library(TMB)
 library(ape)
 library(rnaturalearth)
-library(elevatr)
 library(phylobase)
 library(phylosignal)
 library(viridisLite)
-library(raster)
 library(fmesher)
 
 setwd( R'(C:\Users\James.Thorson\Desktop\Git\Spatio-temporal-models-for-ecologists\Chap_11)' )
@@ -17,46 +15,69 @@ source( "../Shared_functions/add_legend.R" )
 DF = read.csv( file="Top20_Samples.csv" )
 trait_set = read.csv( "Top20_traits.csv" )
 
-# Load population density
-pop_dens = st_read( "../Chap_6/population_density.csv", options=c("X_POSSIBLE_NAMES=X","Y_POSSIBLE_NAMES=Y"), crs=st_crs("+proj=longlat +datum=WGS84") )
-  pop_dens$Dens2020 = as.numeric(pop_dens$Dens2020)
+if( TRUE ){
+  # sf_df
+  sf_grid = st_geometry(st_read( "sf_grid.shp" ))
 
-# Load copNDVI (saved from rasterdiv)
-copNDVI = raster( "../Chap_10/NDVI.tif" )
-#library(rasterdiv)
+  # sf_grid
+  sf_DF = read.csv( "sf_DF.csv" )
+  sf_DF = st_as_sf( sf_DF, coords=c("X","Y"), crs = st_crs("+proj=longlat +datum=WGS84") )
+  sf_DF$Genus_species = factor(sf_DF$Genus_species)
 
-# Get spatial domain
-sf_states = ne_states( c("United States of America"), return="sf")
-sf_states = sf_states[pmatch(c("Cal", "Oregon", "Washington", "Idaho", "Montana", "Utah", "New Mex", "Arizona", "Wyoming", "Colorad", "Nevada"), sf_states$name_en),]
-sf_states = st_union(sf_states)
+  # df_grid
+  df_grid = read.csv( "df_grid.csv" )
+  df_grid = st_as_sf( df_grid, coords=c("X","Y"), crs = st_crs("+proj=longlat +datum=WGS84") )
+}else{
+  # OLD CODE using get_elev_point(.), which is now deprecated (uses 4.2.2)
+  library(elevatr)
+  library(raster)
 
-# Create data-frame
-sf_DF = st_as_sf( DF, coords=c("Longitude","Latitude"), crs="+proj=longlat +datum=WGS84")
+  # Get spatial domain
+  sf_states = ne_states( c("United States of America"), return="sf")
+  sf_states = sf_states[pmatch(c("Cal", "Oregon", "Washington", "Idaho", "Montana", "Utah", "New Mex", "Arizona", "Wyoming", "Colorad", "Nevada"), sf_states$name_en),]
+  sf_states = st_union(sf_states)
 
-#
-sf_fullgrid = st_make_grid( sf_DF, cellsize=1, square=FALSE )
-sf_grid = st_make_valid(st_intersection( sf_fullgrid, sf_states ))
-sf_grid = sf_grid[ st_area(sf_grid)>(0.01*max(st_area(sf_grid))) ]    # or 0.01
+  # Load population density
+  pop_dens = st_read( "../Chap_6/population_density.csv", options=c("X_POSSIBLE_NAMES=X","Y_POSSIBLE_NAMES=Y"), crs=st_crs("+proj=longlat +datum=WGS84") )
+    pop_dens$Dens2020 = as.numeric(pop_dens$Dens2020)
 
-# make data frame of covariates
-df_grid = st_centroid(sf_grid)
-df_grid = get_elev_point( df_grid, src = "aws" )
-df_grid$log_elevation_km = log( ifelse(df_grid$elevation<1, 1, df_grid$elevation) / 1000 )
-df_grid$NDVI = extract( x=copNDVI, y=as(df_grid,"Spatial") )
-df_grid$scale_NDVI = scale( df_grid$NDVI )[,1]
-df_grid$pop_dens = pop_dens$Dens2020[ st_nearest_feature( sf_grid, pop_dens ) ]
-df_grid$log_pop_dens = log(df_grid$pop_dens)
-df_grid = data.frame(df_grid)
+  # Load copNDVI (saved from rasterdiv)
+  copNDVI = raster( "../Chap_10/NDVI.tif" )
+  #library(rasterdiv)
 
-#
-sf_DF = st_intersection( sf_DF, st_union(sf_grid) )
-sf_DF$Genus_species = factor(sf_DF$Genus_species)
-temp_DF = get_elev_point( sf_DF, src = "aws" )
-sf_DF$log_elevation_km = log( ifelse(temp_DF$elevation<1, 1, temp_DF$elevation) / 1000 )
-sf_DF$NDVI = extract( x=copNDVI, y=as(sf_DF,"Spatial") )
-sf_DF$scale_NDVI = scale( sf_DF$NDVI )[,1]
-sf_DF$pop_dens = pop_dens$Dens2020[ st_nearest_feature( sf_DF, pop_dens ) ]
-sf_DF$log_pop_dens = log(sf_DF$pop_dens)
+  # Create data-frame
+  sf_DF = st_as_sf( DF, coords=c("Longitude","Latitude"), crs="+proj=longlat +datum=WGS84")
+
+  #
+  sf_fullgrid = st_make_grid( sf_DF, cellsize=1, square=FALSE )
+  sf_grid = st_make_valid(st_intersection( sf_fullgrid, sf_states ))
+  sf_grid = sf_grid[ st_area(sf_grid)>(0.01*max(st_area(sf_grid))) ]    # or 0.01
+
+  # make data frame of covariates
+  df_grid = st_centroid(sf_grid)
+  df_grid = get_elev_point( df_grid, src = "aws" )
+  df_grid$log_elevation_km = log( ifelse(df_grid$elevation<1, 1, df_grid$elevation) / 1000 )
+  df_grid$NDVI = extract( x=copNDVI, y=as(df_grid,"Spatial") )
+  df_grid$scale_NDVI = scale( df_grid$NDVI )[,1]
+  df_grid$pop_dens = pop_dens$Dens2020[ st_nearest_feature( sf_grid, pop_dens ) ]
+  df_grid$log_pop_dens = log(df_grid$pop_dens)
+  df_grid = data.frame(df_grid)
+
+  #
+  sf_DF = st_intersection( sf_DF, st_union(sf_grid) )
+  sf_DF$Genus_species = factor(sf_DF$Genus_species)
+  temp_DF = get_elev_point( sf_DF, src = "aws" )
+  sf_DF$log_elevation_km = log( ifelse(temp_DF$elevation<1, 1, temp_DF$elevation) / 1000 )
+  sf_DF$NDVI = extract( x=copNDVI, y=as(sf_DF,"Spatial") )
+  sf_DF$scale_NDVI = scale( sf_DF$NDVI )[,1]
+  sf_DF$pop_dens = pop_dens$Dens2020[ st_nearest_feature( sf_DF, pop_dens ) ]
+  sf_DF$log_pop_dens = log(sf_DF$pop_dens)
+
+  #
+  st_write( sf_grid, dsn = "sf_grid.shp" )
+  st_write( sf_DF, dsn = "sf_DF.csv", layer_options = "GEOMETRY=AS_XY" )
+  st_write( df_grid, dsn = "df_grid.csv", layer_options = "GEOMETRY=AS_XY" )
+}
 
 #
 taxa = levels( sf_DF$Genus_species )
@@ -176,7 +197,7 @@ report = obj$report()
 parhat = obj$env$parList()
 
 # plotting stuff
-short_names = sapply( taxa, FUN=function(char){
+short_names = sapply( as.character(taxa), FUN=function(char){
   tmp = strsplit(char,"_")[[1]]
   paste0( substr(tmp[1],1,1), ". ", tmp[2] )
 })
