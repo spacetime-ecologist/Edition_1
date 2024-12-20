@@ -1,5 +1,7 @@
 Chap-2 / Chap-5:  Fix bug in plots where agb = NA wasn't included when plotting sample locations
 
+Chap-3:  Gompertz time-series ... discuss 2D profile on SD_measurement vs. SD_process, and tendancy for bimodal profile with SD_process = 0 & SD_measurement = 0 as information decreases
+
 Chap-5:  Add plot for finite-element basis functions for SPDE method
 Chap-5:  Add explanation for how SPDE method can be derived as simultaneous equation model, see Slide-19 of Week-5 Lecture powerpoint
 

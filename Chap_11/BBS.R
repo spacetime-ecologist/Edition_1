@@ -8,7 +8,7 @@ library(phylosignal)
 library(viridisLite)
 library(fmesher)
 
-setwd( R'(C:\Users\James.Thorson\Desktop\Git\Spatio-temporal-models-for-ecologists\Chap_11)' )
+setwd( R'(C:\Users\James.Thorson\Desktop\Git\Edition_1\Chap_11)' )
 source( "../Shared_functions/add_legend.R" )
 
 # Load data
